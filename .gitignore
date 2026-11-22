@@ -171,6 +171,7 @@ conda-meta/
 
 # mkdocs/Zensical documentation
 /site
+/sites/
 
 # mypy
 .mypy_cache/
