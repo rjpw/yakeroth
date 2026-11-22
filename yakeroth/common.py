@@ -5,14 +5,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from ..models import (
+from yakeroth.models import (
     ImageTagsManifest,
     ImageTagEntry,
     ModuleSpec,
     ModulesFile,
     SiteConfig,
 )
-from ..git_utils import (
+from yakeroth.git_utils import (
     GitError,
     clean_untracked,
     commit as git_commit,
@@ -26,7 +26,7 @@ from ..git_utils import (
     ensure_clean_working_tree,
     stage_all,
 )
-from ..docker_utils import (
+from yakeroth.docker_utils import (
     DockerError,
     build_image,
     compose_down,
@@ -42,9 +42,9 @@ from ..docker_utils import (
     push_image,
     pull_image,
 )
-from ..sync_modules import SyncError, sync as sync_modules, load_modules_yml
-from ..dockerfile_template import DOCKERFILE_TEMPLATE
-from .. import TEMPLATES
+from yakeroth.sync_modules import SyncError, sync as sync_modules, load_modules_yml
+from yakeroth.dockerfile_template import DOCKERFILE_TEMPLATE
+from yakeroth import TEMPLATES
 
 console = None  # Will be initialized in cli.py
 
@@ -107,6 +107,7 @@ def load_config(config_path: Optional[str] = None) -> SiteConfig:
 
 def load_image_tags(site_dir: Path) -> ImageTagsManifest:
     """Load image tags manifest."""
+    import yaml
     manifest_file = site_dir / "state" / "image-tags.yml"
     if not manifest_file.exists():
         return ImageTagsManifest(entries=[])
