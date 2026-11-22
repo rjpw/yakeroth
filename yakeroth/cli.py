@@ -53,8 +53,7 @@ from .docker_utils import (
     pull_image,
 )
 from .sync_modules import SyncError, sync as sync_modules, load_modules_yml
-
-
+from .dockerfile_template import DOCKERFILE_TEMPLATE
 # Embedded templates to avoid packaging issues
 TEMPLATES = {
     "modules.yml.j2": """# modules.yml - Declarative module list for {{ site }}
@@ -401,9 +400,10 @@ def init(ctx: click.Context, site: str, force: bool):
         content = jinja2.Template(template_content).render(site=site, project_name=get_project_name(site))
         target.write_text(content)
 
+    # Write Dockerfile (not a jinja2 template, just a raw file)
+    (site_dir / "Dockerfile").write_text(DOCKERFILE_TEMPLATE)
+
     # Create directories
-    for d in ["modules", "patches", "scripts", "sql/custom/db_auth", "sql/custom/db_characters", "sql/custom/db_world", "state/db-backups", "env/modules"]:
-        (site_dir / d).mkdir(parents=True, exist_ok=True)
     if repo:
         stage_all(repo)
         git_commit(repo, f"site: init {site} (templates)")
@@ -473,12 +473,11 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
         "org.azerothcore.modules-lock-sha": modules_lock_sha,
         "org.azerothcore.db-schema-version": "0",  # Will be updated after db-import
     }
-
     client = get_client()
     # Use site directory as build context so COPY works with relative paths
     build_path = site_dir
-    # Dockerfile is in yakeroth repo at docker/Dockerfile relative to site_dir
-    dockerfile = Path(__file__).parent.parent / "docker" / "Dockerfile"
+    # Dockerfile is in the site directory (written during init)
+    dockerfile = site_dir / "Dockerfile"
     # Make dockerfile path relative to build_path
     dockerfile_rel = dockerfile.relative_to(build_path)
 
