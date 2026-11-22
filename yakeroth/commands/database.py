@@ -3,6 +3,7 @@
 import click
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from ..git_utils import (
     get_repo,
@@ -16,9 +17,10 @@ from ..docker_utils import (
     compose_up,
 )
 from ..models import ImageTagsManifest, ImageTagEntry
+from ..cli import get_site_dir, get_project_name, console
 
 
-def register(cli):
+def register_database_commands(cli):
     """Register database commands with the CLI group."""
 
     @cli.command()
@@ -27,8 +29,6 @@ def register(cli):
     @click.pass_context
     def db_backup(ctx: click.Context, site: str, label: Optional[str]):
         """Create labeled DB backup (all three databases)."""
-        from ..cli import get_site_dir, get_project_name, console
-
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         project_name = get_project_name(site)
 
@@ -46,7 +46,7 @@ def register(cli):
     @click.pass_context
     def db_restore(ctx: click.Context, site: str, backup_prefix: str):
         """Restore DB from backup (all three databases)."""
-        from ..cli import get_site_dir, get_project_name, console
+        from ..cli import get_site_dir, get_project_name
 
         if not click.confirm(f"Restore databases from {backup_prefix}? This will overwrite current data."):
             return
@@ -69,8 +69,6 @@ def register(cli):
     @click.pass_context
     def db_schema_version(ctx: click.Context, site: str):
         """Show current DB schema version."""
-        from ..cli import get_site_dir, get_project_name, console
-
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         project_name = get_project_name(site)
 
@@ -79,3 +77,8 @@ def register(cli):
             console.print(f"DB schema version: {version}")
         except DockerError as e:
             raise click.ClickException(str(e)) from e
+
+
+def register_database_commands(cli):
+    """Register database commands with the CLI group."""
+    pass  # The decorators already registered them

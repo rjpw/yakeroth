@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from ..models import ImageTagsManifest
+from ..models import ImageTagsManifest, ImageTagEntry
 from ..git_utils import (
     get_repo,
     reset_hard,
@@ -18,10 +18,10 @@ from ..docker_utils import (
     DockerError,
     mysql_restore_all,
 )
-from ..models import ImageTagsManifest, ImageTagEntry
+from ..cli import get_site_dir, get_project_name, console
 
 
-def register(cli):
+def register_rollback_commands(cli):
     """Register rollback/history/status commands with the CLI group."""
 
     @cli.command()
@@ -33,8 +33,6 @@ def register(cli):
     @click.pass_context
     def rollback(ctx: click.Context, site: str, target: Optional[str], with_db: bool, clean: bool, no_clean: bool):
         """Reset site directory to previous state."""
-        from ..cli import get_site_dir, get_project_name, console
-
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         repo = get_repo(site_dir)
 
@@ -66,8 +64,6 @@ def register(cli):
     @click.pass_context
     def history(ctx: click.Context, site: str):
         """Show site operation history."""
-        from ..cli import get_site_dir, console
-
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         repo = get_repo(site_dir)
 
@@ -80,8 +76,6 @@ def register(cli):
     @click.pass_context
     def status(ctx: click.Context, site: str):
         """Show git status of site."""
-        from ..cli import get_site_dir, console
-
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         repo = get_repo(site_dir)
 
@@ -104,3 +98,8 @@ def register(cli):
             console.print("Untracked:")
             for f in status_info["untracked"]:
                 console.print(f"  ? {f}")
+
+
+def register_rollback_commands(cli):
+    """Register rollback/history/status commands with the CLI group."""
+    pass  # The decorators already registered them

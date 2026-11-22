@@ -10,9 +10,10 @@ from ..git_utils import (
     commit as git_commit,
     ensure_clean_working_tree,
 )
+from ..cli import get_site_dir, console
 
 
-def register(cli):
+def register_config_commands(cli):
     """Register config commands with the CLI group."""
 
     @cli.command()
@@ -22,8 +23,6 @@ def register(cli):
     @click.pass_context
     def config_set(ctx: click.Context, site: str, key: str, value: str):
         """Set env var in env/.env (auto-converts to AC_ naming convention)."""
-        from ..cli import get_site_dir, console
-
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         repo = get_repo(site_dir)
         ensure_clean_working_tree(repo)
@@ -62,3 +61,8 @@ def register(cli):
         git_commit(repo, f"site: config-set {ac_key}={value}")
 
         console.print(f"[green]Set {ac_key}={value}[/green]")
+
+
+def register_config_commands(cli):
+    """Register config commands with the CLI group."""
+    pass  # The decorators already registered them

@@ -1,11 +1,11 @@
 """Command modules for yakeroth CLI."""
 
-from .site import register as register_site_commands
-from .modules import register as register_module_commands
-from .config import register as register_config_commands
-from .database import register as register_database_commands
-from .images import register as register_images_commands
-from .rollback import register as register_rollback_commands
+from .site import register_site_commands
+from .modules import register_module_commands
+from .config import register_config_commands
+from .database import register_database_commands
+from .images import register_images_commands
+from .rollback import register_rollback_commands
 
 
 def register_all(cli):

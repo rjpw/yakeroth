@@ -14,9 +14,10 @@ from ..git_utils import (
     ensure_clean_working_tree,
 )
 from ..sync_modules import SyncError, sync as sync_modules, load_modules_yml
+from ..cli import get_site_dir, console
 
 
-def register(cli):
+def register_module_commands(cli):
     """Register module management commands with the CLI group."""
 
     @cli.command()
@@ -25,8 +26,6 @@ def register(cli):
     @click.pass_context
     def module_add(ctx: click.Context, site: str, spec: str):
         """Add module to modules.yml (format: name@branch or name@branch:commit)."""
-        from ..cli import get_site_dir, console
-
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         repo = get_repo(site_dir)
         ensure_clean_working_tree(repo)
@@ -75,8 +74,6 @@ def register(cli):
     @click.pass_context
     def module_update(ctx: click.Context, site: str, name: str, target: Optional[str]):
         """Update module in modules.yml."""
-        from ..cli import get_site_dir, console
-
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         repo = get_repo(site_dir)
         ensure_clean_working_tree(repo)
@@ -114,8 +111,6 @@ def register(cli):
     @click.pass_context
     def module_remove(ctx: click.Context, site: str, name: str):
         """Remove module from modules.yml."""
-        from ..cli import get_site_dir, console
-
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         repo = get_repo(site_dir)
         ensure_clean_working_tree(repo)
@@ -133,6 +128,6 @@ def register(cli):
         console.print(f"[green]Removed {name}[/green]")
 
 
-def register(cli):
+def register_module_commands(cli):
     """Register module commands with the CLI group."""
-    pass  # Decorators already registered
+    pass  # The decorators already registered them

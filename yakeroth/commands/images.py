@@ -12,9 +12,10 @@ from ..docker_utils import (
     get_db_schema_version,
 )
 from ..git_utils import get_repo
+from ..cli import get_site_dir, get_project_name, console
 
 
-def register(cli):
+def register_images_commands(cli):
     """Register image commands with the CLI group."""
 
     @cli.command()
@@ -23,8 +24,6 @@ def register(cli):
     @click.pass_context
     def image_info(ctx: click.Context, site: str, tag: Optional[str]):
         """Show image metadata."""
-        from ..cli import get_site_dir, console
-
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         manifest = load_image_tags(site_dir)
 
@@ -61,8 +60,6 @@ def register(cli):
     @click.pass_context
     def verify_compatibility(ctx: click.Context, site: str):
         """Check image/schema compatibility without starting."""
-        from ..cli import get_site_dir, get_project_name, console
-
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         project_name = get_project_name(site)
         manifest = load_image_tags(site_dir)
@@ -86,3 +83,8 @@ def register(cli):
                 sys.exit(1)
         except DockerError as e:
             console.print(f"[yellow]Could not check database: {e}[/yellow]")
+
+
+def register_images_commands(cli):
+    """Register image commands with the CLI group."""
+    pass  # The decorators already registered them

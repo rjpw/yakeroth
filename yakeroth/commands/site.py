@@ -26,8 +26,8 @@ from ..docker_utils import (
     mysqldump_all,
 )
 from ..sync_modules import SyncError, sync as sync_modules, load_modules_yml
-from ..dockerfile_template import DOCKERFILE_TEMPLATE
-from .. import TEMPLATES
+from .. import TEMPLATES, DOCKERFILE_TEMPLATE
+from ..cli import get_site_dir, get_project_name, console
 
 
 def register_site_commands(cli):
@@ -39,8 +39,6 @@ def register_site_commands(cli):
     @click.pass_context
     def init(ctx: click.Context, site: str, force: bool):
         """Initialize a new site directory with templates."""
-        from ..cli import get_site_dir, get_project_name
-
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         if site_dir.exists() and not force:
             raise click.ClickException(f"Site directory exists: {site_dir}. Use --force to overwrite.")
@@ -75,7 +73,7 @@ def register_site_commands(cli):
             target.write_text(content)
 
         # Write Dockerfile (not a jinja2 template, just a raw file)
-        (site_dir / "Dockerfile").write_text(__import__("yakeroth.dockerfile_template", fromlist=["DOCKERFILE_TEMPLATE"]).DOCKERFILE_TEMPLATE)
+        (site_dir / "Dockerfile").write_text(DOCKERFILE_TEMPLATE)
 
         # Create directories
         for d in ["modules", "patches", "scripts", "sql/custom/db_auth", "sql/custom/db_characters", "sql/custom/db_world", "state/db-backups", "env/modules"]:
@@ -85,7 +83,6 @@ def register_site_commands(cli):
             stage_all(repo)
             git_commit(repo, f"site: init {site} (templates)")
 
-        from ..cli import console
         console.print(f"[green]Initialized site: {site_dir}[/green]")
 
     @cli.command()
@@ -93,7 +90,7 @@ def register_site_commands(cli):
     @click.pass_context
     def sync(ctx: click.Context, site: str):
         """Sync modules: resolve, clone, generate CMake, copy SQL/configs."""
-        from ..cli import get_site_dir, console
+        from ..cli import get_site_dir
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         try:
             sync_modules(site_dir)
@@ -110,7 +107,7 @@ def register_site_commands(cli):
     @click.pass_context
     def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[str], ac_ref: Optional[str], ac_repo: Optional[str]):
         """Build Docker image with site modules."""
-        from ..cli import get_site_dir, console
+        from ..cli import get_site_dir
         import yaml
 
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
@@ -198,8 +195,7 @@ def register_site_commands(cli):
     @click.pass_context
     def push(ctx: click.Context, site: str, registry: Optional[str]):
         """Push site images to registry."""
-        from ..cli import get_site_dir, console
-
+        from ..cli import get_site_dir
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         manifest = load_image_tags(site_dir)
 
@@ -220,8 +216,7 @@ def register_site_commands(cli):
     @click.pass_context
     def pull(ctx: click.Context, site: str, registry: Optional[str]):
         """Pull site images from registry."""
-        from ..cli import get_site_dir, console
-
+        from ..cli import get_site_dir
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         manifest = load_image_tags(site_dir)
 
@@ -243,7 +238,6 @@ def register_site_commands(cli):
     @click.pass_context
     def prune_images(ctx: click.Context, site: str, keep: int, dry_run: bool):
         """Prune old site images per retention policy."""
-        from ..cli import console
         from ..docker_utils import prune_images, get_client
 
         client = get_client()
@@ -262,7 +256,7 @@ def register_site_commands(cli):
     @click.pass_context
     def up(ctx: click.Context, site: str, force: bool):
         """Start site containers with compatibility check."""
-        from ..cli import get_site_dir, get_project_name, console
+        from ..cli import get_site_dir, get_project_name
 
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         project_name = get_project_name(site)
@@ -328,7 +322,7 @@ def register_site_commands(cli):
     @click.pass_context
     def down(ctx: click.Context, site: str):
         """Stop site containers."""
-        from ..cli import get_site_dir, get_project_name, console
+        from ..cli import get_site_dir, get_project_name
 
         site_dir = get_site_dir(site, ctx.obj["site_dir"])
         project_name = get_project_name(site)
@@ -352,20 +346,10 @@ def register_site_commands(cli):
 
         result = compose_logs(site_dir, project_name, follow=True)
         if result.returncode != 0:
-            from ..cli import console
             console.print(result.stderr)
 
 
 # Also export a function to register all commands
 def register(cli):
     """Register all site commands with the CLI group."""
-    init.callback = init
-    sync.callback = sync
-    build.callback = build
-    push.callback = push
-    pull.callback = pull
-    prune_images.callback = prune_images
-    up.callback = up
-    down.callback = down
-    logs.callback = logs
-    # The decorators already registered them, this is just for explicit registration if needed
+    pass  # The decorators already registered them
