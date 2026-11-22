@@ -37,7 +37,7 @@ def build_image(
     try:
         image, logs = client.images.build(
             path=str(path),
-            dockerfile=str(dockerfile.relative_to(path)),
+            dockerfile=str(dockerfile),
             tag=tag,
             buildargs=build_args,
             labels=labels,
