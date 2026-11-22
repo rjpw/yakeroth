@@ -15,6 +15,10 @@ DOCKERFILE_TEMPLATE = r"""# Yakeroth Site Worldserver Build
 #     -f Dockerfile \
 #     --target worldserver \
 #     .
+#
+# NOTE: If build fails, try pinning AC_REF to a known-good tag:
+#   --build-arg AC_REF=v1.0.0
+#   or a specific commit SHA
 
 # =============================================================================
 # Stage 1: Fetch AzerothCore source
@@ -45,6 +49,8 @@ ARG MODULES_LOCK_SHA
 ARG DB_SCHEMA_VERSION=0
 
 # Install build dependencies
+# NOTE: AzerothCore master may require additional dependencies.
+# If build fails, consider pinning AC_REF to a known-good tag (e.g., v1.0.0).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     gcc \
@@ -62,6 +68,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libboost-atomic-dev \
     libboost-chrono-dev \
     libboost-date-time-dev \
+    libreadline-dev \
+    libace-dev \
+    libgmp-dev \
+    libfmt-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy AzerothCore source
@@ -119,6 +129,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libboost-atomic1.74 \
     libboost-chrono1.74 \
     libboost-date-time1.74 \
+    libreadline8 \
+    libace-6.4.5 \
+    libgmp10 \
+    libfmt10 \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
