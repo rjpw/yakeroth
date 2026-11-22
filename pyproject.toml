@@ -31,8 +31,6 @@ Issues = "https://github.com/rjpw/yakeroth/issues"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["yakeroth*"]
-[tool.setuptools.package-data]
-"yakeroth" = ["templates/**/*"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
