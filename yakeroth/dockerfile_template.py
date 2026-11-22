@@ -31,9 +31,9 @@ RUN git clone --depth 1 --branch "${AC_REF}" "${AC_REPO}" . \
     && git rev-parse HEAD > /acore-git-sha.txt
 
 # =============================================================================
-# Stage 2: Build worldserver with site modules
+# Stage 2: Build worldserver with site modules (public builder)
 # =============================================================================
-FROM azerothcore/ac-builder:latest AS worldserver-builder
+FROM ubuntu:22.04 AS worldserver-builder
 
 # Build args from site
 ARG SITE_MODULES_DIR
@@ -43,6 +43,26 @@ ARG SITE_NAME
 ARG SITE_GIT_SHA
 ARG MODULES_LOCK_SHA
 ARG DB_SCHEMA_VERSION=0
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake \
+    gcc \
+    g++ \
+    make \
+    git \
+    libssl-dev \
+    libmysqlclient-dev \
+    libboost-system-dev \
+    libboost-filesystem-dev \
+    libboost-thread-dev \
+    libboost-program-options-dev \
+    libboost-regex-dev \
+    libboost-iostreams-dev \
+    libboost-atomic-dev \
+    libboost-chrono-dev \
+    libboost-date-time-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy AzerothCore source
 COPY --from=acore-fetch /acore /azerothcore
