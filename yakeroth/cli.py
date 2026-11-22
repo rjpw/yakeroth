@@ -161,7 +161,7 @@ def init(ctx: click.Context, site: str, force: bool):
         git_commit(repo, f"site: init {site}")
 
     # Render templates
-    template_dir = Path(__file__).parent.parent / "templates"
+    template_dir = Path(__file__).parent / "templates"
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
 
     templates = {
