@@ -54,77 +54,21 @@ from .docker_utils import (
 )
 from .sync_modules import SyncError, sync as sync_modules, load_modules_yml
 from .dockerfile_template import DOCKERFILE_TEMPLATE
+from . import TEMPLATES
+
+from .common import (
+    console,
+    get_site_dir,
+    get_project_name,
+    load_config,
+    load_image_tags,
+    save_image_tags,
+    setup_logging,
+)
 
 from .commands import register_all
 
 console = Console()
-
-
-def setup_logging(json_output: bool = False, verbose: bool = False) -> None:
-    """Configure logging."""
-    level = logging.DEBUG if verbose else logging.INFO
-    if json_output:
-        logging.basicConfig(
-            level=level,
-            format="%(asctime)s %(levelname)s %(name)s %(message)s",
-            handlers=[logging.StreamHandler()],
-        )
-    else:
-        logging.basicConfig(
-            level=level,
-            format="%(message)s",
-            handlers=[RichHandler(console=console, rich_tracebacks=True)],
-        )
-
-
-def get_site_dir(site: str, site_dir: Optional[str] = None) -> Path:
-    """Resolve site directory path."""
-    if site_dir:
-        return Path(site_dir).resolve()
-
-    cwd = Path.cwd()
-    # If we're already in a site directory (contains modules.yml and .git), use parent/sites
-    if (cwd / "modules.yml").exists() and (cwd / ".git").exists():
-        # We're likely in the site directory, check if parent has sites/
-        parent_sites = cwd.parent / "sites" / site
-        if parent_sites.exists():
-            return parent_sites.resolve()
-
-    return (cwd / "sites" / site).resolve()
-
-
-def get_project_name(site: str) -> str:
-    """Generate docker-compose project name."""
-    return f"acore-{site}"
-
-
-def load_config(config_path: Optional[str] = None) -> SiteConfig:
-    """Load global config."""
-    if config_path and Path(config_path).exists():
-        with open(config_path) as f:
-            data = yaml.safe_load(f) or {}
-        return SiteConfig.model_validate(data)
-    return SiteConfig()
-
-
-def load_image_tags(site_dir: Path) -> ImageTagsManifest:
-    """Load image tags manifest."""
-    manifest_file = site_dir / "state" / "image-tags.yml"
-    if not manifest_file.exists():
-        return ImageTagsManifest(entries=[])
-
-    with open(manifest_file) as f:
-        data = yaml.safe_load(f) or {}
-    return ImageTagsManifest.model_validate({"entries": data})
-
-
-def save_image_tags(site_dir: Path, manifest: ImageTagsManifest) -> None:
-    """Save image tags manifest."""
-    manifest_file = site_dir / "state" / "image-tags.yml"
-    manifest_file.parent.mkdir(parents=True, exist_ok=True)
-    data = [entry.model_dump() for entry in manifest.entries]
-    with open(manifest_file, "w") as f:
-        yaml.dump(data, f, sort_keys=False, default_flow_style=False)
 
 
 @click.group()
