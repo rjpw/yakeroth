@@ -32,7 +32,7 @@ Issues = "https://github.com/rjpw/yakeroth/issues"
 where = ["."]
 include = ["yakeroth*"]
 [tool.setuptools.package-data]
-"yakeroth" = ["templates/**/*.j2"]
+"yakeroth" = ["templates/**/*"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
