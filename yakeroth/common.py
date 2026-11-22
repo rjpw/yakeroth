@@ -46,16 +46,15 @@ from yakeroth.sync_modules import SyncError, sync as sync_modules, load_modules_
 from yakeroth.dockerfile_template import DOCKERFILE_TEMPLATE
 from yakeroth import TEMPLATES
 
-console = None  # Will be initialized in cli.py
+from rich.console import Console
+from rich.logging import RichHandler
+import logging
+
+console = Console()
 
 
 def setup_logging(json_output: bool = False, verbose: bool = False) -> None:
     """Configure logging."""
-    import logging
-    from rich.logging import RichHandler
-    from rich.console import Console
-
-    global console
     level = logging.DEBUG if verbose else logging.INFO
     if json_output:
         logging.basicConfig(
@@ -63,14 +62,12 @@ def setup_logging(json_output: bool = False, verbose: bool = False) -> None:
             format="%(asctime)s %(levelname)s %(name)s %(message)s",
             handlers=[logging.StreamHandler()],
         )
-        console = Console()
     else:
         logging.basicConfig(
             level=level,
             format="%(message)s",
-            handlers=[RichHandler(console=Console(), rich_tracebacks=True)],
+            handlers=[RichHandler(console=console, rich_tracebacks=True)],
         )
-        console = Console()
 
 
 def get_site_dir(site: str, site_dir: Optional[str] = None) -> Path:
