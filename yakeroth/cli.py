@@ -440,8 +440,6 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
     repo = get_repo(site_dir)
     ensure_clean_working_tree(repo)
 
-    # Load lock file for modules SHA
-    from .models import ModuleLockFile
     lock_file = site_dir / "modules.lock.yml"
     if not lock_file.exists():
         raise click.ClickException("modules.lock.yml not found. Run 'yakeroth sync' first.")
