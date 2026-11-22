@@ -2,7 +2,7 @@
 
 __version__ = "0.1.0"
 
-from .templates import TEMPLATES
+from .embedded_templates import TEMPLATES
 from .dockerfile_template import DOCKERFILE_TEMPLATE
 
 __all__ = ["main", "TEMPLATES", "DOCKERFILE_TEMPLATE"]
