@@ -161,9 +161,7 @@ def init(ctx: click.Context, site: str, force: bool):
         git_commit(repo, f"site: init {site}")
 
     # Render templates
-    template_dir = Path(__file__).parent / "templates"
-    env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
-
+    import importlib.resources
     templates = {
         "modules.yml.j2": site_dir / "modules.yml",
         "docker-compose.override.yml.j2": site_dir / "docker-compose.override.yml",
@@ -174,8 +172,8 @@ def init(ctx: click.Context, site: str, force: bool):
 
     for template_name, target in templates.items():
         target.parent.mkdir(parents=True, exist_ok=True)
-        template = env.get_template(template_name)
-        content = template.render(site=site, project_name=get_project_name(site))
+        template_content = importlib.resources.read_text("yakeroth.templates", template_name)
+        content = jinja2.Template(template_content).render(site=site, project_name=get_project_name(site))
         target.write_text(content)
 
     # Create directories
