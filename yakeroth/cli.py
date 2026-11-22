@@ -165,7 +165,6 @@ modules/
 sql/custom/
 env/modules/
 ModulesSite.cmake
-modules.lock.yml
 
 # Build artifacts
 *.log
