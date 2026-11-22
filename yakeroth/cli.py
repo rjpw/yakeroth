@@ -475,9 +475,9 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
     }
     client = get_client()
     # Use site directory as build context so COPY works with relative paths
-    build_path = site_dir
+    build_path = site_dir.resolve()
     # Dockerfile is in the site directory (written during init)
-    dockerfile = site_dir / "Dockerfile"
+    dockerfile = (site_dir / "Dockerfile").resolve()
     # Make dockerfile path relative to build_path
     dockerfile_rel = dockerfile.relative_to(build_path)
 
