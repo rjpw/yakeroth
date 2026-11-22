@@ -458,9 +458,9 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
     build_args = {
         "AC_REPO": ac_repo or config.ac_repo,
         "AC_REF": ac_ref or config.ac_ref,
-        "SITE_MODULES_DIR": str(site_dir / "modules"),
-        "SITE_CMAKE_FILE": str(site_dir / "ModulesSite.cmake"),
-        "SITE_SQL_DIR": str(site_dir / "sql"),
+        "SITE_MODULES_DIR": "modules",
+        "SITE_CMAKE_FILE": "ModulesSite.cmake",
+        "SITE_SQL_DIR": "sql",
         "SITE_NAME": site,
         "SITE_GIT_SHA": site_git_sha,
         "MODULES_LOCK_SHA": modules_lock_sha,
@@ -475,12 +475,16 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
     }
 
     client = get_client()
+    # Use site directory as build context so COPY works with relative paths
+    build_path = site_dir
+    # Dockerfile is in yakeroth repo at docker/Dockerfile relative to site_dir
     dockerfile = Path(__file__).parent.parent / "docker" / "Dockerfile"
-    build_path = Path(__file__).parent.parent  # yakeroth repo root
+    # Make dockerfile path relative to build_path
+    dockerfile_rel = dockerfile.relative_to(build_path)
 
     console.print(f"Building [cyan]{image_tag}[/cyan]...")
     image_id, digest = build_image(
-        client, build_path, dockerfile, image_tag, build_args, labels, no_cache
+        client, build_path, dockerfile_rel, image_tag, build_args, labels, no_cache
     )
 
     # Update manifest
