@@ -141,6 +141,7 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
         "SITE_NAME": site,
         "SITE_GIT_SHA": site_git_sha,
         "MODULES_LOCK_SHA": modules_lock_sha,
+        "BUILD_DATE": datetime.utcnow().isoformat() + "Z",
     }
 
     # Labels

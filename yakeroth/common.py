@@ -73,7 +73,12 @@ def setup_logging(json_output: bool = False, verbose: bool = False) -> None:
 def get_site_dir(site: str, site_dir: Optional[str] = None) -> Path:
     """Resolve site directory path."""
     if site_dir:
-        return Path(site_dir).resolve()
+        base = Path(site_dir).resolve()
+        # If the provided path already ends with the site name, use it as-is
+        if base.name == site:
+            return base
+        # Otherwise append the site name
+        return base / site
 
     cwd = Path.cwd()
     # If we're already in a site directory (contains modules.yml and .git), use parent/sites

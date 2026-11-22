@@ -88,10 +88,10 @@ WORKDIR /azerothcore/build
 RUN cmake \
     -DCMAKE_INSTALL_PREFIX=/azerothcore/install \
     -DSITE_MODULES_CMAKE=/azerothcore/ModulesSite.cmake \
-    -DTOOLS=0 \
-    -DSCRIPTS=1 \
-    -DMODULES=1 \
-    -DSERVERS=1 \
+    -DTOOLS=none \
+    -DSCRIPTS=static \
+    -DMODULES=static \
+    -DSERVERS=static \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     /azerothcore \
     && make -j$(nproc) \
@@ -100,12 +100,13 @@ RUN cmake \
 # =============================================================================
 # Stage 3: Runtime image
 # =============================================================================
-FROM debian:bookworm-slim AS worldserver
+FROM ubuntu:22.04 AS worldserver
 
 ARG SITE_NAME
 ARG SITE_GIT_SHA
 ARG MODULES_LOCK_SHA
 ARG DB_SCHEMA_VERSION=0
+ARG BUILD_DATE
 
 LABEL org.azerothcore.site="${SITE_NAME}" \
       org.azerothcore.site-git-sha="${SITE_GIT_SHA}" \
@@ -130,9 +131,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libboost-chrono1.74 \
     libboost-date-time1.74 \
     libreadline8 \
-    libace-6.4.5 \
+    libace-7.0.6 \
     libgmp10 \
-    libfmt10 \
+    libfmt8 \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
