@@ -302,7 +302,16 @@ def get_site_dir(site: str, site_dir: Optional[str] = None) -> Path:
     """Resolve site directory path."""
     if site_dir:
         return Path(site_dir).resolve()
-    return Path.cwd() / "sites" / site
+    
+    cwd = Path.cwd()
+    # If we're already in a site directory (contains modules.yml and .git), use parent/sites
+    if (cwd / "modules.yml").exists() and (cwd / ".git").exists():
+        # We're likely in the site directory, check if parent has sites/
+        parent_sites = cwd.parent / "sites" / site
+        if parent_sites.exists():
+            return parent_sites.resolve()
+    
+    return (cwd / "sites" / site).resolve()
 
 
 def get_project_name(site: str) -> str:
