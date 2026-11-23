@@ -86,7 +86,8 @@ COPY ${SITE_SQL_DIR} /azerothcore/sql/custom/
 # Build with site modules included
 WORKDIR /azerothcore/build
 
-RUN cmake \
+RUN set -euxo pipefail; \
+    cmake \
     -DCMAKE_INSTALL_PREFIX=/azerothcore/install \
     -DSITE_MODULES_CMAKE=/azerothcore/ModulesSite.cmake \
     -DTOOLS=none \
@@ -96,10 +97,11 @@ RUN cmake \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_POLICY_DEFAULT_CMP0148=OLD \
     /azerothcore \
-    2>&1 | tee /azerothcore/cmake.log \
-    && make -j$(nproc) 2>&1 | tee /azerothcore/build.log \
-    && make install 2>&1 | tee /azerothcore/install.log \
-    && mkdir -p /azerothcore/install/share
+    2>&1 | tee /azerothcore/cmake.log; \
+    make -j$(nproc) 2>&1 | tee /azerothcore/build.log; \
+    make install 2>&1 | tee /azerothcore/install.log; \
+    ls -la /azerothcore/install/; \
+    mkdir -p /azerothcore/install/share
 
 # =============================================================================
 # Stage 3: Runtime image
