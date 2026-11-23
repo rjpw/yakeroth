@@ -99,7 +99,7 @@ yakeroth/
 │       ├── .env.j2
 │       └── env.ac.j2
 ├── docs/
-│   └── docker-compose-sites.md
+│   └── server-composition.md
 ├── pyproject.toml
 ├── README.md
 ├── LICENSE
@@ -218,7 +218,7 @@ db_backup_retention: 10
 1. Add function in `cli.py` with `@cli.command()` decorator
 2. Follow mutating command pattern (git check → execute → commit → tag)
 3. Add help text and option annotations
-4. Update `docs/docker-compose-sites.md` with command documentation
+4. Update `docs/server-composition.md` with command documentation
 
 ### Modifying Module Sync Logic
 1. Edit `sync_modules.py` — `resolve_module_commit`, `clone_module`, `copy_sql_files`, `generate_cmake`

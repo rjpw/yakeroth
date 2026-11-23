@@ -60,5 +60,5 @@ When helping users operate yakeroth sites:
 ## References
 
 - Full skill: `.agents/skills/yakeroth-ops/SKILL.md`
-- Documentation: `docs/docker-compose-sites.md`
+- Documentation: `docs/server-composition.md`
 - AzerothCore Docker: https://www.azerothcore.org/wiki/install-with-docker

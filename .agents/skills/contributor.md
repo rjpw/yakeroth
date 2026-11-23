@@ -251,7 +251,7 @@ git commit -am "chore: bump version to X.Y.Z"
 | `templates/*.j2` | Jinja2 templates for `yakeroth init` (compose override, etc.) |
 | `yakeroth/dockerfile_template.py` | Dockerfile template string (used by `init`) |
 | `yakeroth/embedded_templates.py` | Other embedded templates |
-| `docs/docker-compose-sites.md` | Full operational documentation |
+| `docs/server-composition.md` | Full operational documentation |
 | `README.md` | Quick start & overview |
 
 ---

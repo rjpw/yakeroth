@@ -151,7 +151,7 @@ yakeroth/                    # <-- YOU CLONE THIS (the tool)
 
 ## Documentation
 
-- [Full docs](docs/docker-compose-sites.md)
+- [Full docs](docs/server-composition.md)
 - [Agent skill](.agents/skills/yakeroth-ops/SKILL.md)
 - [AGENTS.md](AGENTS.md) — for coding agents
 
