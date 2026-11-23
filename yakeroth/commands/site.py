@@ -159,6 +159,19 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
     dockerfile = (site_dir / "Dockerfile").resolve()
     # Make dockerfile path relative to build_path
     dockerfile_rel = dockerfile.relative_to(build_path)
+    # Print manual docker build command for debugging
+    build_cmd = "docker build \\\n"
+    for key, value in build_args.items():
+        build_cmd += f"  --build-arg {key}={value} \\\n"
+    build_cmd += f"  -t {image_tag} \\\n"
+    build_cmd += f"  -f {dockerfile_rel} \\\n"
+    if no_cache:
+        build_cmd += f"  --no-cache \\\n"
+    build_cmd += f"  --target worldserver \\\n"
+    build_cmd += f"  --progress=plain \\\n"
+    build_cmd += f"  ."
+    console.print(f"\n[dim]Manual build command (run from {build_path}):[/dim]")
+    console.print(f"[dim]{build_cmd}[/dim]\n")
 
     console.print(f"Building [cyan]{image_tag}[/cyan]...")
     image_id, digest = build_image(
