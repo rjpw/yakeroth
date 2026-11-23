@@ -95,9 +95,18 @@ def init(ctx: click.Context, site: str, force: bool):
 def sync(ctx: click.Context, site: str, ac_repo: Optional[str], ac_ref: Optional[str]):
     """Sync modules: resolve, clone, generate CMake, copy SQL/configs."""
     site_dir = get_site_dir(site, ctx.obj["site_dir"])
+    config = ctx.obj["config"]
+    
+    # Report config source
+    config_path = ctx.obj.get("config_path")
+    if config_path and Path(config_path).exists():
+        console.print(f"[dim]Using global config: {config_path}[/dim]")
+    elif (Path.home() / ".config" / "yakeroth" / "config.yml").exists():
+        console.print(f"[dim]Using global config: ~/.config/yakeroth/config.yml[/dim]")
+    
     # Pass global config from context for AC repo/ref defaults
     try:
-        sync_modules(site_dir, ac_repo=ac_repo, ac_ref=ac_ref, config=ctx.obj["config"])
+        sync_modules(site_dir, ac_repo=ac_repo, ac_ref=ac_ref, config=config)
         console.print(f"[green]Synced modules for {site}[/green]")
     except SyncError as e:
         raise click.ClickException(str(e)) from e
@@ -117,6 +126,13 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
 
     site_dir = get_site_dir(site, ctx.obj["site_dir"])
     config = ctx.obj["config"]
+    
+    # Report config source
+    config_path = ctx.obj.get("config_path")
+    if config_path and Path(config_path).exists():
+        console.print(f"[dim]Using global config: {config_path}[/dim]")
+    elif (Path.home() / ".config" / "yakeroth" / "config.yml").exists():
+        console.print(f"[dim]Using global config: ~/.config/yakeroth/config.yml[/dim]")
 
     repo = get_repo(site_dir)
 
