@@ -331,7 +331,58 @@ yakeroth config-set mysite AllowTwoSide.Interaction.Calendar 1
 
 ---
 
+
+## Global Configuration
+
+Yakeroth supports an optional global config file for default values. Location priority:
+
+1. `--config /path/to/config.yml` (explicit CLI option)
+2. `YAKEROTH_CONFIG` environment variable
+3. `~/.config/yakeroth/config.yml` (default)
+4. Built-in defaults
+
+### Config File Format
+
+```yaml
+# ~/.config/yakeroth/config.yml
+image_retention: 5
+db_backup_retention: 10
+db_backup_path: null
+compose_site_dir: "sites"
+site_git_remote: null
+ac_repo: "https://github.com/azerothcore/azerothcore-wotlk.git"
+ac_ref: "master"
+```
+
+### Field Descriptions
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `image_retention` | int | 5 | Number of recent built images to keep |
+| `db_backup_retention` | int | 10 | Number of recent DB backups to keep |
+| `db_backup_path` | string or null | null | Override backup directory |
+| `compose_site_dir` | string | "sites" | Subdirectory under yakeroth repo for sites |
+| `site_git_remote` | string or null | null | Remote name for git push of site repos |
+| `ac_repo` | string | azerothcore/azerothcore-wotlk | Default AzerothCore git repository URL |
+| `ac_ref` | string | master | Default AzerothCore git ref |
+
+### Example: mod-playerbots Defaults
+
+```yaml
+# ~/.config/yakeroth/config.yml
+ac_repo: "https://github.com/mod-playerbots/azerothcore-wotlk.git"
+ac_ref: "Playerbot"
+image_retention: 10
+db_backup_retention: 20
+```
+
+Then `yakeroth build mysite` uses the Playerbots fork automatically -- no flags needed.
+
+
+---
+
 ## Pre-built Database Image
+
 
 Per official docs, use `acore/ac-wotlk-db:master` for instant DB startup:
 
