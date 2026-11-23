@@ -90,10 +90,11 @@ RUN set -euxo pipefail; \
     cmake \
     -DCMAKE_INSTALL_PREFIX=/azerothcore/install \
     -DSITE_MODULES_CMAKE=/azerothcore/ModulesSite.cmake \
-    -DTOOLS=none \
     -DSCRIPTS=static \
     -DMODULES=static \
-    -DSERVERS=static \
+    -DAPPS_BUILD=all \
+    -DTOOLS_BUILD=none \
+    -DWITHOUT_GIT=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_POLICY_DEFAULT_CMP0148=OLD \
     /azerothcore \
