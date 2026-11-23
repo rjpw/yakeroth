@@ -1,7 +1,9 @@
 """Docker utilities for yakeroth."""
 
+import json
 import os
 import subprocess
+from collections import deque
 from pathlib import Path
 from typing import Optional
 
@@ -36,7 +38,6 @@ def build_image(
     log_tail: int = 50,
 ) -> tuple[str, str, list[str]]:
     """Build Docker image and return (image_id, digest, log_tail_lines)."""
-    from collections import deque
     try:
         image, logs = client.images.build(
             path=str(path),
@@ -47,18 +48,29 @@ def build_image(
             nocache=no_cache,
             rm=True,
             forcerm=True,
-            decode=True,
+            decode=False,  # decode=True has a bug in docker SDK 7.2.0
         )
         tail = deque(maxlen=log_tail)
         for chunk in logs:
+            # When decode=False, each chunk is raw bytes containing a JSON object
+            if isinstance(chunk, bytes):
+                chunk = chunk.decode("utf-8")
+            if isinstance(chunk, str):
+                try:
+                    chunk = json.loads(chunk)
+                except json.JSONDecodeError:
+                    continue
             if "stream" in chunk:
                 line = chunk["stream"].rstrip()
                 tail.append(line)
                 if stream_output:
                     from rich.console import Console
+
                     Console().print(f"[dim]{line}[/dim]")
             elif "errorDetail" in chunk:
-                raise DockerError(f"Build failed: {chunk['errorDetail'].get('message', 'Unknown error')}")
+                raise DockerError(
+                    f"Build failed: {chunk['errorDetail'].get('message', 'Unknown error')}"
+                )
         digest = image.attrs.get("RepoDigests", [image.id])[0]
         return image.id, digest, list(tail)
     except DockerException as e:
@@ -95,7 +107,17 @@ def push_image(client: docker.DockerClient, tag: str, registry: str | None = Non
         tag = registry_tag
 
     try:
-        for line in client.api.push(tag, stream=True, decode=True):
+        # decode=True has a bug in docker SDK 7.2.0; use decode=False and parse manually
+        for raw_line in client.api.push(tag, stream=True, decode=False):
+            if isinstance(raw_line, bytes):
+                raw_line = raw_line.decode("utf-8")
+            if isinstance(raw_line, str):
+                try:
+                    line = json.loads(raw_line)
+                except json.JSONDecodeError:
+                    continue
+            else:
+                line = raw_line
             if "error" in line:
                 raise DockerError(f"Push failed: {line['error']}")
         return tag

@@ -1,6 +1,6 @@
 """Yakeroth - AzerothCore server composition manager."""
 
-__version__ = "0.4.4"
+__version__ = "0.4.5"
 
 from .embedded_templates import TEMPLATES
 from .dockerfile_template import DOCKERFILE_TEMPLATE
