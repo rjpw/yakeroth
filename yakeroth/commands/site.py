@@ -156,8 +156,10 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
         shutil.rmtree(ac_cache_dst)
     if ac_cache_src.exists():
         shutil.copytree(ac_cache_src, ac_cache_dst)
-    else:
-        console.print(f"[yellow]Warning: AC repo cache not found at {ac_cache_src}. Build will fail unless --no-cache used to re-fetch.[/yellow]")
+        # Remove .git to prevent git from treating it as submodule
+        git_dir = ac_cache_dst / ".git"
+        if git_dir.exists():
+            shutil.rmtree(git_dir)
     # If only .gitignore is modified and acore-source is the only untracked (due to .gitignore not staged yet),
     # stage .gitignore first so acore-source becomes ignored
     if repo.is_dirty(untracked_files=True):
