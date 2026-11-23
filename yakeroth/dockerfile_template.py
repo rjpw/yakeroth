@@ -30,16 +30,10 @@ ARG AC_REF=master
 ARG AC_COMMIT
 WORKDIR /acore
 
-# Install git for commit verification
-RUN apk add --no-cache git
-
 # AC repo is COPY'd from build context at /acore-source
+# Note: .git directory is removed in build context to avoid submodule issues;
+# commit verification is done on host during cache fetch (ensure_acore_cached)
 COPY acore-source/ /acore/
-
-# Verify commit matches expected
-RUN git rev-parse HEAD > /acore-git-sha.txt \
-    && test "$(cat /acore-git-sha.txt)" = "${AC_COMMIT}" \
-    && echo "AC repo commit verified: ${AC_COMMIT}"
 
 # =============================================================================
 # Stage 2: Build worldserver with site modules (public builder)
