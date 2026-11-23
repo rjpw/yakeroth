@@ -94,6 +94,7 @@ RUN cmake \
     -DMODULES=static \
     -DSERVERS=static \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DCMAKE_POLICY_DEFAULT_CMP0148=OLD \
     /azerothcore \
     2>&1 | tee /azerothcore/cmake.log \
     && make -j$(nproc) 2>&1 | tee /azerothcore/build.log \
