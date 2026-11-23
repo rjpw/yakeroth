@@ -105,18 +105,19 @@ yakeroth/
 ├── LICENSE
 └── AGENTS.md                 # This file
 ```
-
 ## Key Files & Responsibilities
 
 | File | Responsibility |
 |------|----------------|
 | `cli.py` | All user-facing commands. Mutating commands: check git status → execute → auto-commit → tag milestones |
 | `models.py` | Pydantic models for `modules.yml`, `modules.lock.yml`, `state/image-tags.yml`, `SiteConfig` |
-| `sync_modules.py` | Resolves module specs → clones at locked commit → generates `ModulesSite.cmake` → copies SQL/configs |
+| `sync_modules.py` | Resolves module specs → clones at locked commit → generates `ModulesSite.cmake` → copies SQL/configs. **Populates AC repo cache and writes `ac_repo`/`ac_ref`/`ac_commit` to lock file** |
 | `git_utils.py` | Git operations: `ls_remote_commit`, `clone_or_update`, `commit`, `tag`, `reset_hard`, `clean_untracked` |
-| `docker_utils.py` | Docker SDK: `build_image`, `compose_up/down`, `mysqldump_all`, `mysql_restore_all`, `prune_images` |
-| `docker/Dockerfile` | Multi-stage build: fetches AC source → builds with site modules → runtime image with labels |
-| `templates/*.j2` | Rendered by `yakeroth init` with `site` and `project_name` variables |
+| `docker_utils.py` | Docker SDK: `build_image` (streams output when `stream_output=True`), `compose_up/down`, `mysqldump_all`, `mysql_restore_all`, `prune_images` |
+| `common.py` | Shared utilities: `get_site_dir`, `load_config` (auto-loads from `--config` / `YAKEROTH_CONFIG` / `~/.config/yakeroth/config.yml`), AC repo cache management (`ensure_acore_cached`, `get_acore_cached_repo`) |
+| `dockerfile_template.py` | Jinja2 template for site Dockerfile (COPYs cached AC repo from `acore-source/`, verifies `AC_COMMIT`, captures build logs to `/home/acore/logs/`) |
+| `docker/Dockerfile` | Multi-stage build: acore-fetch (COPYs cached repo) → worldserver-builder (cmake, make, install, captures logs) → worldserver (copies logs) |
+| `templates/*.j2` | Rendered by `yakeroth init` with `site` and `project_name` variables (`.gitignore.j2` includes `acore-source/`) |
 
 ## CLI Command Patterns
 
@@ -162,6 +163,39 @@ Each site directory (`sites/<site>/`) is a **git-tracked directory**:
   - `org.opencontainers.image.source=https://github.com/rjpw/yakeroth`
 - **Milestone tags**: `site/<site>/pre-build-<ts>`, `site/<site>/running-<ts>`
 - **Retention**: Keep last N builds (default 5) + all milestone tags
+## AC Repo Cache & Build Reproducibility
+
+To avoid re-fetching AzerothCore on every build and ensure reproducible builds:
+
+- **Cache location**: `~/.cache/yakeroth/acore/<hash>/` (one per AC repo URL)
+- **Populated by**: `yakeroth sync` — resolves `ac_ref` to commit SHA, clones/fetches to cache
+- **Stored in lock file**: `modules.lock.yml` now includes `ac_repo`, `ac_ref`, `ac_commit` fields
+- **Build uses cache**: `yakeroth build` copies cached repo to `acore-source/` in build context
+- **Dockerfile COPY**: Stage 1 (acore-fetch) now `COPY acore-source/ /acore/` instead of `git clone`
+- **Commit verification**: Dockerfile verifies `git rev-parse HEAD` matches `AC_COMMIT` build arg
+- **Build logs captured**: `cmake.log`, `build.log`, `install.log` copied to runtime image at `/home/acore/logs/`
+
+**Precedence for AC repo/ref**: CLI flags (`--ac-repo`/`--ac-ref`) > Global config (`~/.config/yakeroth/config.yml`) > Defaults
+
+### Global Configuration
+
+`load_config()` auto-loads from:
+1. `--config /path/to/config.yml` (explicit CLI option)
+2. `YAKEROTH_CONFIG` environment variable
+3. `~/.config/yakeroth/config.yml` (default)
+4. Built-in defaults
+
+```yaml
+# ~/.config/yakeroth/config.yml
+ac_repo: "https://github.com/mod-playerbots/azerothcore-wotlk.git"
+ac_ref: "Playerbot"
+image_retention: 5
+db_backup_retention: 10
+```
+
+### Build Log Streaming
+
+`yakeroth build` now streams Docker build output to console (via `build_image(stream_output=True)`). Last 100 lines returned for debugging.
 
 ## Database Schema Coupling
 
