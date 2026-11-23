@@ -85,7 +85,9 @@ def build_image(
         digest = image.attrs.get("RepoDigests", [image.id])[0]
         return image.id, digest, list(tail)
     except DockerException as e:
-        raise DockerError(f"Build failed: {e}") from e
+        # Include log tail in error for debugging
+        tail_str = "\n".join(list(tail)[-20:]) if tail else "(no build output captured)"
+        raise DockerError(f"Build failed: {e}\n--- Last 20 build lines ---\n{tail_str}") from e
 
 
 def get_image_digest(client: docker.DockerClient, tag: str) -> str:
