@@ -94,8 +94,10 @@ RUN cmake \
     -DSERVERS=static \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     /azerothcore \
-    && make -j$(nproc) \
-    && make install
+    2>&1 | tee /azerothcore/cmake.log \
+    && make -j$(nproc) 2>&1 | tee /azerothcore/build.log \
+    && make install 2>&1 | tee /azerothcore/install.log \
+    && mkdir -p /azerothcore/install/share
 
 # =============================================================================
 # Stage 3: Runtime image
@@ -144,9 +146,13 @@ RUN groupadd -r acore && useradd -r -g acore -d /home/acore -s /bin/bash acore
 COPY --from=worldserver-builder /azerothcore/install/bin/worldserver /home/acore/worldserver
 COPY --from=worldserver-builder /azerothcore/install/etc /home/acore/etc
 COPY --from=worldserver-builder /azerothcore/install/share /home/acore/share
-
 # Copy SQL files for db-import container
 COPY --from=worldserver-builder /azerothcore/sql /home/acore/sql
+
+# Copy build logs for debugging
+COPY --from=worldserver-builder /azerothcore/cmake.log /home/acore/logs/cmake.log
+COPY --from=worldserver-builder /azerothcore/build.log /home/acore/logs/build.log
+COPY --from=worldserver-builder /azerothcore/install.log /home/acore/logs/install.log
 
 RUN chown -R acore:acore /home/acore
 
