@@ -206,6 +206,11 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
     # Make dockerfile path relative to build_path
     dockerfile_rel = dockerfile.relative_to(build_path)
     # Print manual docker build command for debugging
+    # Print manual docker build command for debugging
+    console.print(f"\n[dim]Manual build command (run from {build_path}):[/dim]")
+    console.print(f"[dim]# Step 1: Copy cached AC repo to build context (required for COPY in Dockerfile)[/dim]")
+    console.print(f"[dim]cp -r {get_acore_cached_repo(ac_repo_for_cache)} acore-source/[/dim]")
+    console.print(f"[dim]# Step 2: Build (AC_COMMIT from modules.lock.yml ensures reproducibility)[/dim]")
     build_cmd = "docker build \\\n"
     for key, value in build_args.items():
         build_cmd += f"  --build-arg {key}={value} \\\n"
@@ -216,7 +221,6 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
     build_cmd += f"  --target worldserver \\\n"
     build_cmd += f"  --progress=plain \\\n"
     build_cmd += f"  ."
-    console.print(f"\n[dim]Manual build command (run from {build_path}):[/dim]")
     console.print(f"[dim]{build_cmd}[/dim]\n")
 
     if not yes:
