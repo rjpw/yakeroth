@@ -25,9 +25,13 @@ This tool **depends on** `https://github.com/azerothcore/azerothcore-wotlk` — 
 
 ## Quick Start
 
+## Quick Start
+
 ```bash
-# Install
+# Install (choose one)
 pipx install git+https://github.com/rjpw/yakeroth
+# OR
+uv tool install git+https://github.com/rjpw/yakeroth
 
 # Initialize a site
 yakeroth init mysite
