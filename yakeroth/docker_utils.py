@@ -51,26 +51,37 @@ def build_image(
             decode=False,  # decode=True has a bug in docker SDK 7.2.0
         )
         tail = deque(maxlen=log_tail)
-        for chunk in logs:
-            # When decode=False, each chunk is raw bytes containing a JSON object
-            if isinstance(chunk, bytes):
-                chunk = chunk.decode("utf-8")
-            if isinstance(chunk, str):
+        buffer = ""
+        for raw_chunk in logs:
+            # Accumulate raw bytes/str into buffer, split by newlines
+            if isinstance(raw_chunk, bytes):
+                buffer += raw_chunk.decode("utf-8")
+            elif isinstance(raw_chunk, str):
+                buffer += raw_chunk
+            else:
+                continue
+
+            # Process complete lines
+            lines = buffer.split("\n")
+            buffer = lines[-1]  # Keep incomplete line in buffer
+            for line in lines[:-1]:
+                if not line:
+                    continue
                 try:
-                    chunk = json.loads(chunk)
+                    chunk = json.loads(line)
                 except json.JSONDecodeError:
                     continue
-            if "stream" in chunk:
-                line = chunk["stream"].rstrip()
-                tail.append(line)
-                if stream_output:
-                    from rich.console import Console
+                if "stream" in chunk:
+                    stream_line = chunk["stream"].rstrip()
+                    tail.append(stream_line)
+                    if stream_output:
+                        from rich.console import Console
 
-                    Console().print(f"[dim]{line}[/dim]")
-            elif "errorDetail" in chunk:
-                raise DockerError(
-                    f"Build failed: {chunk['errorDetail'].get('message', 'Unknown error')}"
-                )
+                        Console().print(f"[dim]{stream_line}[/dim]")
+                elif "errorDetail" in chunk:
+                    raise DockerError(
+                        f"Build failed: {chunk['errorDetail'].get('message', 'Unknown error')}"
+                    )
         digest = image.attrs.get("RepoDigests", [image.id])[0]
         return image.id, digest, list(tail)
     except DockerException as e:
