@@ -59,6 +59,9 @@ class ModulesLockFile(BaseModel):
     """modules.lock.yml root."""
 
     modules: list[ModuleLock] = Field(default_factory=list)
+    ac_repo: str | None = Field(default=None, description="AzerothCore repository URL")
+    ac_ref: str | None = Field(default=None, description="AzerothCore git ref (branch/tag)")
+    ac_commit: str | None = Field(default=None, description="Resolved AzerothCore commit SHA")
 
     def get(self, name: str) -> ModuleLock | None:
         for m in self.modules:

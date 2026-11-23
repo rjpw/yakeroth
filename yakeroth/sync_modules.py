@@ -180,11 +180,24 @@ def apply_patches(spec: ModuleSpec, module_path: Path, patches_dir: Path) -> Non
     except subprocess.CalledProcessError as e:
         raise SyncError(f"Failed to apply patch {spec.patch}: {e.stderr}") from e
 
-
-def sync(site_dir: Path, auto_commit: bool = True) -> ModulesLockFile:
+def sync(site_dir: Path, auto_commit: bool = True, ac_repo: str | None = None, ac_ref: str | None = None) -> ModulesLockFile:
     """Main sync function - resolves, clones, generates files."""
+    from yakeroth.common import load_config
+    from yakeroth.git_utils import ls_remote_commit
+    
     modules_yml = load_modules_yml(site_dir)
     repo = get_repo(site_dir)
+
+    # Load config for defaults
+    config = load_config()
+    
+    # Resolve AC repo and ref (from args or config)
+    resolved_ac_repo = ac_repo or config.ac_repo
+    resolved_ac_ref = ac_ref or config.ac_ref
+
+    # Ensure AC repo is cached and get commit SHA
+    from yakeroth.common import ensure_acore_cached
+    ac_cache_path, ac_commit = ensure_acore_cached(resolved_ac_repo, resolved_ac_ref)
 
     modules_dir = site_dir / "modules"
     sql_dir = site_dir / "sql"
@@ -219,8 +232,13 @@ def sync(site_dir: Path, auto_commit: bool = True) -> ModulesLockFile:
     # Generate CMake include file
     generate_cmake(resolved, modules_dir, cmake_file)
 
-    # Write lock file
-    lock_file = ModulesLockFile(modules=[lock for _, lock in resolved])
+    # Write lock file with AC repo info
+    lock_file = ModulesLockFile(
+        modules=[lock for _, lock in resolved],
+        ac_repo=resolved_ac_repo,
+        ac_ref=resolved_ac_ref,
+        ac_commit=ac_commit,
+    )
     write_modules_lock(site_dir, lock_file)
 
     # Git commit if requested

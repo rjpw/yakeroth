@@ -4,6 +4,7 @@ import click
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+import shutil
 
 from ..models import ImageTagsManifest, ImageTagEntry, SiteConfig
 from ..git_utils import (
@@ -88,12 +89,14 @@ def init(ctx: click.Context, site: str, force: bool):
 
 @click.command()
 @click.argument("site")
+@click.option("--ac-repo", help="AzerothCore git repository URL")
+@click.option("--ac-ref", help="AzerothCore git ref (branch/tag/commit)")
 @click.pass_context
-def sync(ctx: click.Context, site: str):
+def sync(ctx: click.Context, site: str, ac_repo: Optional[str], ac_ref: Optional[str]):
     """Sync modules: resolve, clone, generate CMake, copy SQL/configs."""
     site_dir = get_site_dir(site, ctx.obj["site_dir"])
     try:
-        sync_modules(site_dir)
+        sync_modules(site_dir, ac_repo=ac_repo, ac_ref=ac_ref)
         console.print(f"[green]Synced modules for {site}[/green]")
     except SyncError as e:
         raise click.ClickException(str(e)) from e
@@ -115,14 +118,53 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
     config = ctx.obj["config"]
 
     repo = get_repo(site_dir)
-    ensure_clean_working_tree(repo)
 
+    # Prepare AC repo cache in build context (before clean check, since it's gitignored)
     lock_file = site_dir / "modules.lock.yml"
+    if lock_file.exists():
+        with open(lock_file) as f:
+            lock_data = yaml.safe_load(f) or {}
+        ac_repo_from_lock = lock_data.get("ac_repo")
+        ac_ref_from_lock = lock_data.get("ac_ref")
+        ac_commit_from_lock = lock_data.get("ac_commit")
+    else:
+        lock_data = {}
+        ac_repo_from_lock = ac_ref_from_lock = ac_commit_from_lock = None
+
+    from yakeroth.common import get_acore_cached_repo
+    ac_repo_for_cache = ac_repo_from_lock or ac_repo or config.ac_repo
+    ac_cache_src = get_acore_cached_repo(ac_repo_for_cache)
+    ac_cache_dst = site_dir / "acore-source"
+    if ac_cache_dst.exists():
+        shutil.rmtree(ac_cache_dst)
+    if ac_cache_src.exists():
+        shutil.copytree(ac_cache_src, ac_cache_dst)
+    else:
+        console.print(f"[yellow]Warning: AC repo cache not found at {ac_cache_src}. Build will fail unless --no-cache used to re-fetch.[/yellow]")
+    # If only .gitignore is modified and acore-source is the only untracked (due to .gitignore not staged yet),
+    # stage .gitignore first so acore-source becomes ignored
+    if repo.is_dirty(untracked_files=True):
+        dirty_files = [item.a_path for item in repo.index.diff(None)]
+        untracked = repo.untracked_files
+        all_dirty = set(dirty_files) | set(untracked)
+        # Allow .gitignore modification + acore-source untracked (will be ignored once .gitignore staged)
+        # Also allow just acore-source/ untracked (if .gitignore already staged)
+        if all_dirty == {".gitignore", "acore-source/"} or all_dirty == {".gitignore"} or all_dirty == {"acore-source/"}:
+            if ".gitignore" in dirty_files:
+                repo.index.add([".gitignore"])
+                console.print("[dim]Staged .gitignore update (acore-source ignore)[/dim]")
+            # After staging .gitignore, acore-source/ may still show as untracked due to git index caching.
+            # This is expected - accept it since acore-source/ is now gitignored.
+        else:
+            ensure_clean_working_tree(repo)
+
     if not lock_file.exists():
         raise click.ClickException("modules.lock.yml not found. Run 'yakeroth sync' first.")
-
-    with open(lock_file) as f:
-        lock_data = yaml.safe_load(f) or {}
+    
+    # Read AC repo info from lock file (populated by sync)
+    ac_repo_from_lock = lock_data.get("ac_repo")
+    ac_ref_from_lock = lock_data.get("ac_ref")
+    ac_commit_from_lock = lock_data.get("ac_commit")
     modules_lock_sha = get_file_sha(repo, "modules.lock.yml")[:12]
     site_git_sha = get_short_sha(repo)[:12]
 
@@ -133,9 +175,11 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
         image_tag = f"acore-{site}-worldserver:{site_git_sha}-{modules_lock_sha}"
 
     # Build args (relative to site_dir build context)
+    # Use lock file values for reproducibility (set by sync)
     build_args = {
-        "AC_REPO": ac_repo or config.ac_repo,
-        "AC_REF": ac_ref or config.ac_ref,
+        "AC_REPO": ac_repo_from_lock or ac_repo or config.ac_repo,
+        "AC_REF": ac_ref_from_lock or ac_ref or config.ac_ref,
+        "AC_COMMIT": ac_commit_from_lock or "",
         "SITE_MODULES_DIR": "modules",
         "SITE_CMAKE_FILE": "ModulesSite.cmake",
         "SITE_SQL_DIR": "sql",
@@ -144,6 +188,7 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
         "MODULES_LOCK_SHA": modules_lock_sha,
         "BUILD_DATE": datetime.utcnow().isoformat() + "Z",
     }
+
 
     # Labels
     labels = {

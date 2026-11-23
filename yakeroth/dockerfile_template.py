@@ -27,12 +27,16 @@ FROM alpine:3.20 AS acore-fetch
 
 ARG AC_REPO=https://github.com/azerothcore/azerothcore-wotlk.git
 ARG AC_REF=master
-
-RUN apk add --no-cache git
-
+ARG AC_COMMIT
 WORKDIR /acore
-RUN git clone --depth 1 --branch "${AC_REF}" "${AC_REPO}" . \
-    && git rev-parse HEAD > /acore-git-sha.txt
+
+# AC repo is COPY'd from build context at /acore-source
+COPY acore-source/ /acore/
+
+# Verify commit matches expected
+RUN git rev-parse HEAD > /acore-git-sha.txt \
+    && test "$(cat /acore-git-sha.txt)" = "${AC_COMMIT}" \
+    && echo "AC repo commit verified: ${AC_COMMIT}"
 
 # =============================================================================
 # Stage 2: Build worldserver with site modules (public builder)
