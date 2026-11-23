@@ -81,12 +81,12 @@ def get_site_dir(site: str, site_dir: Optional[str] = None) -> Path:
         return base / site
 
     cwd = Path.cwd()
-    # If we're already in a site directory (contains modules.yml and .git), use parent/sites
+    # If we're already in a site directory (contains modules.yml and .git), use it directly
     if (cwd / "modules.yml").exists() and (cwd / ".git").exists():
-        # We're likely in the site directory, check if parent has sites/
-        parent_sites = cwd.parent / "sites" / site
-        if parent_sites.exists():
-            return parent_sites.resolve()
+        # Check if the current directory name matches the site name
+        if cwd.name == site:
+            return cwd.resolve()
+        # Otherwise we might be in a parent directory; fall through to default logic
 
     return (cwd / "sites" / site).resolve()
 
