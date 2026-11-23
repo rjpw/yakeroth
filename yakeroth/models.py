@@ -1,8 +1,18 @@
 """Data models for yakeroth configuration files."""
 
+from datetime import datetime
+from enum import Enum
 from pathlib import Path
 from typing import Annotated, Literal
 from pydantic import BaseModel, Field, field_validator
+
+
+class ModuleCategory(str, Enum):
+    """Module category from GitHub topics."""
+    MODULE = "module"          # azerothcore-module
+    TOOL = "tool"              # azerothcore-tools
+    LUA = "lua"                # azerothcore-lua
+    SQL = "sql"                # azerothcore-sql
 
 
 class ModuleSpec(BaseModel):
@@ -113,6 +123,99 @@ class SiteConfig(BaseModel):
     db_backup_retention: int = 10
     db_backup_path: str | None = None
     compose_site_dir: str = "sites"
-    site_git_remote: str | None = None
     ac_repo: str = "https://github.com/azerothcore/azerothcore-wotlk.git"
     ac_ref: str = "master"
+
+
+class DependencySpec(BaseModel):
+    """Module dependency specification."""
+    name: str
+    version: str = "*"
+    optional: bool = False
+    category: ModuleCategory = ModuleCategory.MODULE
+
+
+class ReleaseInfo(BaseModel):
+    """GitHub release information."""
+    tag_name: str
+    name: str | None = None
+    prerelease: bool = False
+    draft: bool = False
+    published_at: datetime
+    assets: list[str] = Field(default_factory=list)
+
+
+class SQLFileSpec(BaseModel):
+    """SQL file specification for a module."""
+    file: str
+    database: Literal["auth", "characters", "world"] = "world"
+    optional: bool = False
+
+
+class ConfigSpec(BaseModel):
+    """Configuration option schema."""
+    type: Literal["bool", "int", "float", "string"]
+    default: str | int | float | bool | None = None
+    description: str | None = None
+    min: int | float | None = None
+    max: int | float | None = None
+    options: list[str] | None = None
+
+
+class ModuleManifest(BaseModel):
+    """Enriched module metadata from registry (GitHub)."""
+    name: str
+    full_name: str
+    description: str | None = None
+    homepage: str | None = None
+    repository_url: str
+    categories: list[ModuleCategory] = Field(default_factory=list)
+    topics: list[str] = Field(default_factory=list)
+    latest_release: str | None = None
+    releases: list[ReleaseInfo] = Field(default_factory=list)
+    default_branch: str = "master"
+    dependencies: list[DependencySpec] = Field(default_factory=list)
+    conflicts: list[str] = Field(default_factory=list)
+    provides: list[str] = Field(default_factory=list)
+    cmake_options: dict[str, str] = Field(default_factory=dict)
+    sql_files: list[SQLFileSpec] = Field(default_factory=list)
+    config_schema: dict[str, ConfigSpec] = Field(default_factory=dict)
+    stars: int = 0
+    updated_at: datetime | None = None
+    license: str | None = None
+    ac_compatibility: list[str] = Field(default_factory=list)
+
+    def get_compatible_versions(self, constraint: str) -> list[str]:
+        """Return release versions matching constraint (simple semver)."""
+        from packaging.version import parse as parse_version
+        from packaging.specifiers import SpecifierSet
+        spec = SpecifierSet(constraint)
+        return [r.tag_name for r in self.releases if parse_version(r.tag_name.lstrip("v")) in spec]
+
+
+class ModuleSummary(BaseModel):
+    """Lightweight summary for search results."""
+    name: str
+    full_name: str
+    description: str | None = None
+    stars: int
+    updated_at: datetime | None = None
+    latest_release: str | None = None
+    categories: list[ModuleCategory] = Field(default_factory=list)
+    topics: list[str] = Field(default_factory=list)
+
+
+class ResolvedModule(BaseModel):
+    """Fully resolved module with pinned version."""
+    manifest: ModuleManifest
+    version: str
+    source: str  # git URL or local path
+    commit: str  # resolved commit SHA
+    category: ModuleCategory
+
+
+class ResolvedGraph(BaseModel):
+    """Result of dependency resolution."""
+    modules: list[ResolvedModule]  # Topologically sorted
+    conflicts: list[str] = Field(default_factory=list)
+    missing_deps: list[str] = Field(default_factory=list)
