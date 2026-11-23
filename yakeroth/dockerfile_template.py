@@ -112,13 +112,11 @@ ARG SITE_NAME
 ARG SITE_GIT_SHA
 ARG MODULES_LOCK_SHA
 ARG DB_SCHEMA_VERSION=0
-ARG BUILD_DATE
 
 LABEL org.azerothcore.site="${SITE_NAME}" \
       org.azerothcore.site-git-sha="${SITE_GIT_SHA}" \
       org.azerothcore.modules-lock-sha="${MODULES_LOCK_SHA}" \
       org.azerothcore.db-schema-version="${DB_SCHEMA_VERSION}" \
-      org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.source="https://github.com/rjpw/yakeroth" \
       org.opencontainers.image.title="AzerothCore Worldserver (${SITE_NAME})" \
       org.opencontainers.image.description="Yakeroth-managed site build"

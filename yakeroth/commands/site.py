@@ -135,7 +135,6 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
         console.print(f"[dim]Using global config: ~/.config/yakeroth/config.yml[/dim]")
 
     repo = get_repo(site_dir)
-
     # Prepare AC repo cache in build context (before clean check, since it's gitignored)
     lock_file = site_dir / "modules.lock.yml"
     if lock_file.exists():
@@ -148,13 +147,27 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
         lock_data = {}
         ac_repo_from_lock = ac_ref_from_lock = ac_commit_from_lock = None
 
-    from yakeroth.common import get_acore_cached_repo
+    from yakeroth.common import ensure_acore_cached, get_acore_cached_repo
     ac_repo_for_cache = ac_repo_from_lock or ac_repo or config.ac_repo
-    ac_cache_src = get_acore_cached_repo(ac_repo_for_cache)
+    ac_ref_for_cache = ac_ref_from_lock or ac_ref or config.ac_ref
+    # Ensure cache is up to date (fetch latest for ref, checkout expected commit)
+    ac_cache_src, ac_commit = ensure_acore_cached(ac_repo_for_cache, ac_ref_for_cache)
     ac_cache_dst = site_dir / "acore-source"
+    # Only copy if destination doesn't exist or commit differs (preserve timestamps for Docker cache)
+    need_copy = True
     if ac_cache_dst.exists():
-        shutil.rmtree(ac_cache_dst)
-    if ac_cache_src.exists():
+        try:
+            current_commit = subprocess.run(
+                ["git", "-C", str(ac_cache_dst), "rev-parse", "HEAD"],
+                capture_output=True, text=True, check=True
+            ).stdout.strip()
+            if current_commit == ac_commit:
+                need_copy = False
+        except subprocess.CalledProcessError:
+            pass  # Not a git repo or other error, will copy
+    if need_copy:
+        if ac_cache_dst.exists():
+            shutil.rmtree(ac_cache_dst)
         shutil.copytree(ac_cache_src, ac_cache_dst)
         # Remove .git to prevent git from treating it as submodule
         git_dir = ac_cache_dst / ".git"
@@ -194,18 +207,17 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
         image_tag = f"acore-{site}-worldserver:{site_git_sha}-{modules_lock_sha}"
 
     # Build args (relative to site_dir build context)
-    # Use lock file values for reproducibility (set by sync)
+    # Use lock file values for reproducibility (set by sync), but AC_COMMIT from fresh cache fetch
     build_args = {
         "AC_REPO": ac_repo_from_lock or ac_repo or config.ac_repo,
         "AC_REF": ac_ref_from_lock or ac_ref or config.ac_ref,
-        "AC_COMMIT": ac_commit_from_lock or "",
+        "AC_COMMIT": ac_commit or ac_commit_from_lock or "",
         "SITE_MODULES_DIR": "modules",
         "SITE_CMAKE_FILE": "ModulesSite.cmake",
         "SITE_SQL_DIR": "sql",
         "SITE_NAME": site,
         "SITE_GIT_SHA": site_git_sha,
         "MODULES_LOCK_SHA": modules_lock_sha,
-        "BUILD_DATE": datetime.utcnow().isoformat() + "Z",
     }
 
 
