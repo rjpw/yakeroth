@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 import shutil
+import subprocess
 
 from ..models import ImageTagsManifest, ImageTagEntry, SiteConfig
 from ..git_utils import (
