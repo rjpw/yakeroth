@@ -226,7 +226,7 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
     if not yes:
         import sys
         if sys.stdin.isatty():
-            confirm = click.confirm("Build? [y|N]", default=False)
+            confirm = click.confirm("Build?", default=False)
             if not confirm:
                 console.print("[yellow]Build cancelled[/yellow]")
                 return
