@@ -105,8 +105,9 @@ def sync(ctx: click.Context, site: str):
 @click.option("--tag", "custom_tag", help="Custom image tag")
 @click.option("--ac-ref", help="AzerothCore git ref (branch/tag/commit)")
 @click.option("--ac-repo", help="AzerothCore git repository URL")
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt")
 @click.pass_context
-def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[str], ac_ref: Optional[str], ac_repo: Optional[str]):
+def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[str], ac_ref: Optional[str], ac_repo: Optional[str], yes: bool):
     """Build Docker image with site modules."""
     import yaml
 
@@ -172,6 +173,20 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
     build_cmd += f"  ."
     console.print(f"\n[dim]Manual build command (run from {build_path}):[/dim]")
     console.print(f"[dim]{build_cmd}[/dim]\n")
+
+    if not yes:
+        import sys
+        if sys.stdin.isatty():
+            confirm = click.confirm("Build? [y|N]", default=False)
+            if not confirm:
+                console.print("[yellow]Build cancelled[/yellow]")
+                return
+        else:
+            # Non-interactive (piped input) - check for 'Y' or 'y' in stdin
+            first_char = sys.stdin.read(1)
+            if first_char.lower() != 'y':
+                console.print("[yellow]Build cancelled (no 'Y' piped)[/yellow]")
+                return
 
     console.print(f"Building [cyan]{image_tag}[/cyan]...")
     image_id, digest = build_image(
