@@ -42,7 +42,24 @@ yakeroth build mysite
 yakeroth up mysite
 ```
 
-## Dual-Repo Design (Important)
+
+## mod-playerbots Requires Custom AzerothCore Fork
+
+**Important:** The standard `azerothcore/azerothcore-wotlk` repository **will not work** with `mod-playerbots`. You must use the Playerbots fork at build time:
+
+```bash
+yakeroth build mysite --ac-repo https://github.com/mod-playerbots/azerothcore-wotlk.git --ac-ref Playerbot
+```
+
+Or set defaults in `~/.config/yakeroth/config.yml`:
+```yaml
+ac_repo: "https://github.com/mod-playerbots/azerothcore-wotlk.git"
+ac_ref: "Playerbot"
+```
+
+The module repository remains `https://github.com/mod-playerbots/mod-playerbots.git` — only the **core repository** changes.
+
+
 
 **yakeroth is a tool; sites are data.** They live in separate git repositories:
 

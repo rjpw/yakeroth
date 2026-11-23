@@ -112,10 +112,11 @@ sites/
 
 ### `modules.yml` -- Source of Truth
 
+ 
 ```yaml
 modules:
   - name: mod-playerbots
-    source: https://github.com/azerothcore/mod-playerbots.git
+    source: https://github.com/mod-playerbots/mod-playerbots.git
     branch: master
     # commit: abc123def456  # Optional: pin to commit
     # build: static         # static|dynamic (default: static)
@@ -123,11 +124,29 @@ modules:
     # sql:
     #   - data/sql/db_characters/mod_playerbots.sql
     #   - data/sql/db_world/mod_playerbots.sql
-
+ 
   - name: mod-autobalance
     source: https://github.com/azerothcore/mod-autobalance.git
     branch: master
 ```
+ 
+> **⚠️ mod-playerbots Requires Custom AzerothCore Fork**
+>
+> The standard `azerothcore/azerothcore-wotlk` repository **will not work** with `mod-playerbots`. You must use the Playerbots fork at build time:
+>
+> ```bash
+> yakeroth build mysite --ac-repo https://github.com/mod-playerbots/azerothcore-wotlk.git --ac-ref Playerbot
+> ```
+>
+> Or set defaults in `~/.config/yakeroth/config.yml`:
+> ```yaml
+> ac_repo: "https://github.com/mod-playerbots/azerothcore-wotlk.git"
+> ac_ref: "Playerbot"
+> ```
+>
+> The module repository remains `https://github.com/mod-playerbots/mod-playerbots.git` — only the **core repository** changes.
+>
+ 
 
 **Fields:**
 - `name` -- Module directory name (also used as CMake target)
@@ -144,7 +163,7 @@ modules:
 ```yaml
 modules:
   - name: mod-playerbots
-    source: https://github.com/azerothcore/mod-playerbots.git
+    source: https://github.com/mod-playerbots/mod-playerbots.git
     branch: master
     commit: a1b2c3d4e5f6...  # Resolved at sync time
     dirname: mod-playerbots

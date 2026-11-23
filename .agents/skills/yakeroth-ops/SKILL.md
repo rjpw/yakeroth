@@ -282,7 +282,24 @@ yakeroth rollback mysite --to site/mysite/running-20261122-143500 --with-db
 # Or if no backup: yakeroth rollback mysite --to site/mysite/pre-build-...
 ```
 
----
+
+### mod-playerbots Fork Requirement
+
+When using `mod-playerbots`, the standard AzerothCore repository will not work. You must use the Playerbots fork:
+
+```bash
+yakeroth build mysite --ac-repo https://github.com/mod-playerbots/azerothcore-wotlk.git --ac-ref Playerbot
+```
+
+Or configure globally in `~/.config/yakeroth/config.yml`:
+```yaml
+ac_repo: "https://github.com/mod-playerbots/azerothcore-wotlk.git"
+ac_ref: "Playerbot"
+```
+
+The module source remains `https://github.com/mod-playerbots/mod-playerbots.git` — only the **core repo** changes.
+
+
 
 ## Hard Stops
 

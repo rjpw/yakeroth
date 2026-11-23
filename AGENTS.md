@@ -190,6 +190,22 @@ Each site directory (`sites/<site>/`) is a **git-tracked directory**:
 1. Edit `sync_modules.py` — `resolve_module_commit`, `clone_module`, `copy_sql_files`, `generate_cmake`
 2. Update `models.py` if `ModuleSpec`/`ModuleLock` fields change
 3. Regenerate lock file format if schema changes (bump version)
+### mod-playerbots Fork Requirement
+
+When working with `mod-playerbots`, the standard AzerothCore repository will not work. The build must use the Playerbots fork:
+
+```bash
+yakeroth build <site> --ac-repo https://github.com/mod-playerbots/azerothcore-wotlk.git --ac-ref Playerbot
+```
+
+Or configure globally in `~/.config/yakeroth/config.yml`:
+```yaml
+ac_repo: "https://github.com/mod-playerbots/azerothcore-wotlk.git"
+ac_ref: "Playerbot"
+```
+
+The module source remains `https://github.com/mod-playerbots/mod-playerbots.git` — only the **core repo** changes.
+
 
 ### Changing Docker Build
 1. Edit `docker/Dockerfile` — multi-stage: acore-fetch → worldserver-builder → worldserver
