@@ -257,8 +257,9 @@ def build(ctx: click.Context, site: str, no_cache: bool, custom_tag: Optional[st
                 return
 
     console.print(f"Building [cyan]{image_tag}[/cyan]...")
-    image_id, digest = build_image(
-        client, build_path, dockerfile_rel, image_tag, build_args, labels, no_cache
+    image_id, digest, build_log_tail = build_image(
+        client, build_path, dockerfile_rel, image_tag, build_args, labels, no_cache,
+        stream_output=True, log_tail=100
     )
 
     # Update manifest

@@ -32,8 +32,11 @@ def build_image(
     build_args: dict[str, str],
     labels: dict[str, str],
     no_cache: bool = False,
-) -> tuple[str, str]:
-    """Build Docker image and return (image_id, digest)."""
+    stream_output: bool = False,
+    log_tail: int = 50,
+) -> tuple[str, str, list[str]]:
+    """Build Docker image and return (image_id, digest, log_tail_lines)."""
+    from collections import deque
     try:
         image, logs = client.images.build(
             path=str(path),
@@ -44,11 +47,20 @@ def build_image(
             nocache=no_cache,
             rm=True,
             forcerm=True,
+            decode=True,
         )
-        # Get digest (RepoDigests may not be available for local images)
-        # Use image.id as fallback
+        tail = deque(maxlen=log_tail)
+        for chunk in logs:
+            if "stream" in chunk:
+                line = chunk["stream"].rstrip()
+                tail.append(line)
+                if stream_output:
+                    from rich.console import Console
+                    Console().print(f"[dim]{line}[/dim]")
+            elif "errorDetail" in chunk:
+                raise DockerError(f"Build failed: {chunk['errorDetail'].get('message', 'Unknown error')}")
         digest = image.attrs.get("RepoDigests", [image.id])[0]
-        return image.id, digest
+        return image.id, digest, list(tail)
     except DockerException as e:
         raise DockerError(f"Build failed: {e}") from e
 
