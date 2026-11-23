@@ -73,6 +73,7 @@ yakeroth/
 - **Investigation**: Output is the proof; no tests needed.
 - **Bug**: A failing test or user report is the repro; add regression test only when no existing test covers the path.
 - **Feature**: Prove via throwaway script; new tests ONLY for uncertain edges or on request.
+- **Azerothcore image build**: Don't assume you are on a beefy machine; where an image build is expected, ask for approval first.
 - **New tests MUST**: Catch plausible consumer-visible bugs; be deterministic, isolated, full-suite-safe.
 - **NEVER test**: Wiring, echoes, source text, incidental defaults, tautologies, bare not-throw, length-grew.
 - **Tests your change breaks**: Update contract tests; delete wording/implementation ones regardless of author.
