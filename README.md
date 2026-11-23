@@ -1,14 +1,21 @@
 # yakeroth
 
-## CAVEATS
+## ⚠️ Caveats
 
-> **AI Disclosure**: This project was developed with significant assistance from AI coding agents (Nemotron 3 Ultra, via the omp platform). All code has been reviewed by the human author but may contain AI-generated patterns or conventions.
+**AI Disclosure**  
+This project was developed with significant assistance from AI coding agents (Nemotron 3 Ultra, via the omp platform). All code has been reviewed by the human author but may contain AI-generated patterns or conventions.
 
-> **Early Stage Warning**: This project is in a *very early stage* (pre-alpha). APIs, CLI commands, file formats, and internal architecture are subject to breaking changes without notice. Do not rely on stability.
+**Early Stage Warning**  
+This project is in a *very early stage* (pre-alpha). APIs, CLI commands, file formats, and internal architecture are subject to breaking changes without notice. Do not rely on stability.
 
-> **Personal Project Notice**: This project is purely for **personal edification and entertainment**. It is not intended for production use, public servers, or any mission-critical deployments. Use at your own risk.
+**Personal Project Notice**  
+This project is purely for **personal edification and entertainment**. It is not intended for production use, public servers, or any mission-critical deployments. Use at your own risk.
 
-> **Non-Affiliation Statement**: The project's author is not affiliated with the AzerothCore team and makes no claims as to the suitability of this project with their much larger and more remarkable achievement.
+**Blizzard / Legal Notice**  
+This tool interacts with AzerothCore, which emulates World of Warcraft. World of Warcraft is a trademark of Blizzard Entertainment, Inc. This project is not affiliated with, endorsed by, or sponsored by Blizzard Entertainment. Use at your own legal risk.
+
+**Non-Affiliation Statement**  
+The project's author is not affiliated with the AzerothCore team and makes no claims as to the suitability of this project with their much larger and more remarkable achievement.
 
 ## Dependencies
 
