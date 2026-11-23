@@ -9,7 +9,7 @@ from typing import Optional
 import yaml
 from git import Repo
 
-from .models import ModuleLock, ModulesLockFile, ModuleSpec, ModulesFile
+from .models import ModuleLock, ModulesLockFile, ModuleSpec, ModulesFile, SiteConfig
 from .git_utils import GitError, clone_or_update, get_repo, ls_remote_commit, stage_all, commit as git_commit, tag as git_tag
 
 logger = logging.getLogger(__name__)
@@ -180,7 +180,7 @@ def apply_patches(spec: ModuleSpec, module_path: Path, patches_dir: Path) -> Non
     except subprocess.CalledProcessError as e:
         raise SyncError(f"Failed to apply patch {spec.patch}: {e.stderr}") from e
 
-def sync(site_dir: Path, auto_commit: bool = True, ac_repo: str | None = None, ac_ref: str | None = None) -> ModulesLockFile:
+def sync(site_dir: Path, auto_commit: bool = True, ac_repo: str | None = None, ac_ref: str | None = None, config: SiteConfig | None = None) -> ModulesLockFile:
     """Main sync function - resolves, clones, generates files."""
     from yakeroth.common import load_config
     from yakeroth.git_utils import ls_remote_commit
@@ -188,8 +188,9 @@ def sync(site_dir: Path, auto_commit: bool = True, ac_repo: str | None = None, a
     modules_yml = load_modules_yml(site_dir)
     repo = get_repo(site_dir)
 
-    # Load config for defaults
-    config = load_config()
+    # Load config for defaults (use passed config or load from default locations)
+    if config is None:
+        config = load_config()
     
     # Resolve AC repo and ref (from args or config)
     resolved_ac_repo = ac_repo or config.ac_repo

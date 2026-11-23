@@ -95,8 +95,9 @@ def init(ctx: click.Context, site: str, force: bool):
 def sync(ctx: click.Context, site: str, ac_repo: Optional[str], ac_ref: Optional[str]):
     """Sync modules: resolve, clone, generate CMake, copy SQL/configs."""
     site_dir = get_site_dir(site, ctx.obj["site_dir"])
+    # Pass global config from context for AC repo/ref defaults
     try:
-        sync_modules(site_dir, ac_repo=ac_repo, ac_ref=ac_ref)
+        sync_modules(site_dir, ac_repo=ac_repo, ac_ref=ac_ref, config=ctx.obj["config"])
         console.print(f"[green]Synced modules for {site}[/green]")
     except SyncError as e:
         raise click.ClickException(str(e)) from e
