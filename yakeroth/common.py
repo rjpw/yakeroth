@@ -97,13 +97,31 @@ def get_project_name(site: str) -> str:
 
 
 def load_config(config_path: Optional[str] = None) -> SiteConfig:
-    """Load global config."""
+    """Load global config. Checks --config flag, YAKEROTH_CONFIG env, then ~/.config/yakeroth/config.yml."""
     from pathlib import Path
     import yaml
+    import os
+    
+    # Check explicit path first
     if config_path and Path(config_path).exists():
         with open(config_path) as f:
             data = yaml.safe_load(f) or {}
         return SiteConfig.model_validate(data)
+    
+    # Check YAKEROTH_CONFIG env var
+    env_path = os.environ.get("YAKEROTH_CONFIG")
+    if env_path and Path(env_path).exists():
+        with open(env_path) as f:
+            data = yaml.safe_load(f) or {}
+        return SiteConfig.model_validate(data)
+    
+    # Check default location
+    default_path = Path.home() / ".config" / "yakeroth" / "config.yml"
+    if default_path.exists():
+        with open(default_path) as f:
+            data = yaml.safe_load(f) or {}
+        return SiteConfig.model_validate(data)
+    
     return SiteConfig()
 
 
