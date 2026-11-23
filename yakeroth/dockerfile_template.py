@@ -30,6 +30,9 @@ ARG AC_REF=master
 ARG AC_COMMIT
 WORKDIR /acore
 
+# Install git for commit verification
+RUN apk add --no-cache git
+
 # AC repo is COPY'd from build context at /acore-source
 COPY acore-source/ /acore/
 
