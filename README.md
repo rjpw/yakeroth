@@ -102,6 +102,7 @@ Each `sites/<name>/` is a self-contained git repo — portable, backuppable, pus
 ## Documentation
 
 - [Full reference: `docs/server-composition.md`](docs/server-composition.md)
+- [Retrospective: `docs/retrospective.md`](docs/retrospective.md) — lessons learned, architectural mistakes, rewrite plan
 - [Agent skill](.agents/skills/yakeroth-ops/SKILL.md)
 - [AGENTS.md](AGENTS.md) — for coding agents
 
