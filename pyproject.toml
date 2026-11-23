@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yakeroth"
-version = "0.4.3"
+version = "0.4.4"
 description = "AzerothCore server composition manager — declarative modules, git-versioned sites, coupled image/DB schema"
 readme = "README.md"
 license = {text = "MIT"}
